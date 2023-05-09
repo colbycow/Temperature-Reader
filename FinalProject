@@ -1,0 +1,93 @@
+#include <LiquidCrystal.h>
+LiquidCrystal lcd(13, 12, 11, 10, 9, 8);    // tell the RedBoard what pins are connected to the display
+
+float voltage = 0;                          //the voltage measured from the TMP36
+float degreesC = 0;                         //the temperature in Celsius, calculated from the voltage
+float degreesF = 0;                        //the temperature in Fahrenheit, calculated from the voltage
+
+const int redPin = 3;             //pin to control the red LED inside the RGB LED
+const int greenPin = 5;           //pin to control the green LED inside the RGB LED
+const int bluePin = 6;            //pin to control the blue LED inside the RGB LED
+
+
+void setup() {
+  // put your setup code here, to run once:
+  lcd.begin(16, 2);                         //tell the lcd library that we are using a display that is 16 characters wide and 2 characters high
+  lcd.clear();                              //clear the display
+
+  Serial.begin (9600);        //set up a serial connection with the computer
+
+  //set the RGB LED pins to output
+  pinMode(redPin, OUTPUT);
+  pinMode(greenPin, OUTPUT);
+  pinMode(bluePin, OUTPUT);
+}
+
+void loop() {
+  
+  voltage = analogRead(A0) * 0.004882813;   //convert the analog reading, which varies from 0 to 1023, back to a voltage value from 0-5 volts
+  degreesC = (voltage - 0.5) * 100.0;       //convert the voltage to a temperature in degrees Celsius
+  degreesF = degreesC * (9.0 / 5.0) + 32.0; //convert the voltage to a temperature in degrees Fahrenheit
+  
+  Serial.print(degreesF);                   //prints the degrees in F on to serial monitor
+  Serial.print(" ");        
+  
+
+  lcd.clear();                              //clear the LCD
+
+  lcd.setCursor(0, 0);                      //set the cursor to the top left position
+  lcd.print("Degrees C: ");                 //print a label for the data
+  lcd.print(degreesC);                      //print the degrees Celsius
+
+  lcd.setCursor(0, 1);                      //set the cursor to the lower left position
+  lcd.print("Degrees F: ");                 //Print a label for the data
+  lcd.print(degreesF);                      //print the degrees Fahrenheit
+
+  delay(1000);                              //delay for 1 second between each reading (this makes the display less noisy)
+
+
+  if (degreesF >= 90) {                     //checks if the temp is above 80F
+
+    analogWrite(redPin, 255);               //make the RGB LED red
+    analogWrite(greenPin, 0);
+    analogWrite(bluePin, 0);
+
+    lcd.clear();
+
+    lcd.setCursor(0, 0);                    //Makes LCD say "its too hot" and displays the degrees
+    lcd.print("It's too hot! :(");
+    lcd.setCursor(0,1);
+    lcd.print("Degrees F: ");
+    lcd.print(degreesF);
+
+    delay(2000);
+  } else if (90 > degreesF && degreesF >= 83) {  //Checks if the temp is between 75 and 80
+
+    analogWrite(redPin, 255);               //Makes RGB LED yellow
+    analogWrite(greenPin, 50);
+    analogWrite(bluePin, 0);
+
+  } else if (83 > degreesF && degreesF >= 69) {
+
+    analogWrite(redPin, 0);                  //Makes RBG LED green
+    analogWrite(greenPin, 255);
+    analogWrite(bluePin, 0);
+  } else {
+
+    analogWrite(redPin, 77);                  //Makes RBG LED light blue
+    analogWrite(greenPin, 195);
+    analogWrite(bluePin, 255);
+
+    lcd.clear();
+
+    lcd.setCursor(0, 0);                    //Makes LCD say "Its getting chilly" and displays the degrees
+    lcd.print("It's Chilly!");
+    lcd.setCursor(0,1);
+    lcd.print("Degrees F: ");
+    lcd.print(degreesF);
+
+    delay(2000);
+  }
+
+
+}
